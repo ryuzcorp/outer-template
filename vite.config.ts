@@ -34,7 +34,7 @@ const CELLD_KEYS = [
 /** Write the deploy-root `dist/wrangler.json` celld deploys, derived from
  * Void's own `dist/ssr/wrangler.json` (never handwritten): `main` rewrites
  * to deploy-root-relative `ssr/…`, the asset directory to `client`, and
- * `vars` to `{}` (Noite patches the app's real env at deploy time).
+ * `vars` to `{}` (Outer patches the app's real env at deploy time).
  * Void's Cloudflare-only `dist/client/.assetsignore` is removed: `celld
  * deploy` refuses it outright, and its entries need no replacement —
  * `wrangler.json` is celld's config surface (never an asset).

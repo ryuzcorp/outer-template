@@ -16,7 +16,7 @@ export default function Home({ todos }: Props) {
     mounted.set(true);
   });
   return (
-    <main class="flex flex-col gap-6">
+    <div class="flex flex-col gap-6">
       <header class="flex flex-col gap-2">
         <h1 class="text-2xl font-semibold">Todos</h1>
         <p class="text-sm opacity-70">
@@ -66,6 +66,6 @@ export default function Home({ todos }: Props) {
           </p>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

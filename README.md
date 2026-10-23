@@ -1,72 +1,53 @@
-# Ilha + Void on Noite
+# Outer App
 
-A [Noite](https://github.com/ryuzcorp/noite) app template: server-rendered
+An [Outer](https://outer.now) app template: server-rendered
 [Ilha](https://ilha.build) pages on [Void](https://void.cloud), built with
 Vite and served by celld.
 
-## Deploy on Noite
-
-Noite deploys on push. Point a remote at your app and push `main`:
-
-```sh
-git remote add noite https://git.<your-noite-host>/<app-slug>
-git push -u noite main
-```
-
-Or create the app from this template in the Noite UI (or with the MCP
-`create_app` tool) and clone the repo it gives you — that remote is already
-configured. Every push to `main` runs install → build → `celld deploy`; the
-deployment page shows the log and the live SHA.
-
-The build is the same one you run locally:
-
-```sh
-bun install
-bun run build
-```
-
-`vite build` writes `dist/wrangler.json` (a celld-ready config derived from
-Void's own `dist/ssr/wrangler.json`), the Worker under `dist/ssr/` and the
-client assets under `dist/client/`. Noite picks that config up automatically
-— there is nothing to configure for a deploy.
-
-If the project pins `packageManager` in `package.json`, Noite installs with
-that; otherwise a lockfile decides (`bun.lock` here), defaulting to bun.
+Every app starts as a copy of this repo (Outer’s `create_app` tool).
+Agents change code with Outer’s `commit` tool — there is no `git push to
+deploy`. Outer builds (`bun install` + `bun run build`) and deploys the
+result to celld; the tool call returns `success` plus the URL, `failed`
+plus the log tail, or `blocked` plus the offending lines to fix.
 
 ## Local development
 
 ```sh
 bun install
 bun run dev        # Vite dev server on http://localhost:5173
-bun run typecheck  # builds first: tsc reads the generated route types
-bun run test       # component tests with ilha/test
+bun run check      # typecheck + lint + tests
+bun run build      # production build: dist/ + dist/wrangler.json
 ```
 
-## Pages and islands
+## Pages
 
-- `pages/*.tsx` — file-based pages (`/` is `pages/index.tsx`).
-- `pages/*.server.ts` — loaders and actions: they run in the Worker, and the
-  page reads them as props (`InferProps`) or calls them through `useForm`.
-- `pages/*.island.tsx` — island pages: Void sends static HTML, and only the
-  imported islands (`.tsx` with `with { island: "load" }`) ship JavaScript.
-- `pages/layout.tsx` — wraps every page; keeps its state across navigations.
-- `void.config.ts` — the Worker: name, compatibility date, bindings.
+- `pages/index.tsx` — the `/` page.
+- `pages/index.server.ts` — loader + action: they run in the Worker, and
+  the page reads them as props (`InferProps`) or calls them with `useForm`.
+- `pages/layout.tsx` — wraps every page. The footer carries a small
+  “Built with Ilha” link to https://ilha.build; remove it if you like.
+- `pages/app.css` — Tailwind + daisyUI (`light` by default, `dark` for
+  `prefers-color-scheme`).
+- `void.config.ts` — the Worker: name, compatibility date, document
+  `head` (PWA manifest, theme color, Open Graph tags), bindings.
 
 ## Bindings
 
 `void.config.ts` declares the Worker in its `cloudflare` section. The
-template ships a commented D1 example; uncomment it and run `bun run build`
-after editing (bindings are read from the built config):
+template ships a commented D1 example; uncomment it and run
+`bun run build` after editing (bindings are read from the built config):
 
 ```ts
 d1_databases: [{ binding: "DB", database_name: "app-db" }],
 ```
 
-The platform provisions the database per app on first deploy. Read it in a
-server module with `env.DB` from `cloudflare:workers`.
+The platform provisions the database per app on first deploy. Outer’s
+deploy does NOT run migration files: create tables in code with
+`env.DB.exec(...)` (see `AGENTS.md`). Read the binding in a server module
+with `env` from `cloudflare:workers`.
 
-Secrets: set them as env vars on the app (Noite passes them to the build and
-the fleet), never in `void.config.ts`.
+Secrets: set them as env vars on the app (Outer passes them to the build
+and the fleet), never in `void.config.ts`.
 
 ## Stack
 
@@ -74,7 +55,8 @@ the fleet), never in `void.config.ts`.
 | --- | --- |
 | ilha / @ilha/void | ^0.16.0 / ^0.1.4 |
 | void | ^1.1.12 |
-| effect | ^4 |
+| daisyUI | ^5 |
+| effect / hono | ^4 |
 | vite | ^8 |
 
 ## License

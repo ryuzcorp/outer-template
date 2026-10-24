@@ -97,6 +97,16 @@ const emitCelldConfig = (): Plugin => ({
 });
 
 export default defineConfig({
+  build: {
+    // No sourcemaps in production builds. Vite's own default is already
+    // `false`, but @cloudflare/vite-plugin emits worker sourcemaps by
+    // default (`getWorkerSourcemap` falls back to `true` unless Vite's
+    // `build.sourcemap` or the Worker's `upload_source_maps` opts out) —
+    // this opts the worker/SSR environment out too. celld uploads all of
+    // dist/, so maps would ship to every deploy for no benefit.
+    // https://vite.dev/config/build-options#build-sourcemap
+    sourcemap: false,
+  },
   plugins: [
     voidPlugin(),
     voidIlha(),

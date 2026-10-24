@@ -3,6 +3,7 @@ import path from "node:path";
 
 import { voidIlha } from "@ilha/void/plugin";
 import tailwindcss from "@tailwindcss/vite";
+import { VitePWA } from "vite-plugin-pwa";
 import { defineConfig } from "vite";
 import type { Plugin } from "vite";
 import { voidPlugin } from "void";
@@ -96,5 +97,52 @@ const emitCelldConfig = (): Plugin => ({
 });
 
 export default defineConfig({
-  plugins: [voidPlugin(), voidIlha(), tailwindcss(), emitCelldConfig()],
+  plugins: [
+    voidPlugin(),
+    voidIlha(),
+    tailwindcss(),
+    // PWA: https://vite-pwa-org.netlify.app/guide/ — manifest, service
+    // worker and icons are owned here; the SSR app has no index.html, so
+    // registration is manual (see pages/_pwa.ts).
+    VitePWA({
+      // /guide/auto-update: a new SW takes control and reloads open tabs.
+      // (clientsClaim + skipWaiting are forced by the plugin for autoUpdate.)
+      registerType: "autoUpdate",
+      // /guide/register-service-worker (Manual Registration): the SSR app
+      // has no index.html for auto/script injection; pages/_pwa.ts
+      // registers the SW on the client instead.
+      injectRegister: null,
+      // No service worker in `vite dev`.
+      devOptions: { enabled: false },
+      // /guide/pwa-minimal-requirements: the plugin generates
+      // dist/client/manifest.webmanifest from this. Icons are injected by
+      // pwaAssets (the plugin fills them in when the manifest omits them).
+      manifest: {
+        name: "Outer App",
+        short_name: "Outer",
+        description: "An Outer app: server-rendered Ilha pages on Void.",
+        start_url: "/",
+        scope: "/",
+        display: "standalone",
+        theme_color: "#ffffff",
+        background_color: "#ffffff",
+      },
+      // /assets-generator/integrations: build-time icons from the single
+      // source public/favicon.svg (minimal-2023 preset by default).
+      pwaAssets: { image: "public/favicon.svg" },
+      workbox: {
+        // No navigation fallback: pages are server-rendered and data is
+        // live (the plugin defaults this to index.html, an SPA shell that
+        // does not exist here). Navigations always go to the network, so a
+        // reload always shows fresh D1 data and POSTs are never cached.
+        navigateFallback: null,
+        // /guide/static-assets (globPatterns): precache only the client
+        // build's hashed assets plus generated icons/fonts — never HTML.
+        // manifest.webmanifest is precached automatically (see
+        // includeManifestIcons) and needs no pattern here.
+        globPatterns: ["**/*.{js,css,png,svg,ico}"],
+      },
+    }),
+    emitCelldConfig(),
+  ],
 });

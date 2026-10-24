@@ -30,7 +30,18 @@ bun run build      # production build: dist/ + dist/wrangler.json
 - `pages/app.css` — Tailwind + daisyUI (`light` by default, `dark` for
   `prefers-color-scheme`).
 - `void.config.ts` — the Worker: name, compatibility date, document
-  `head` (PWA manifest, theme color, Open Graph tags), bindings.
+  `head` (PWA manifest/icon links, theme color, Open Graph tags), bindings.
+
+## PWA
+
+Every app is installable on phones by default. `vite-plugin-pwa`
+(`registerType: 'autoUpdate'`, `generateSW`) owns the manifest, the service
+worker, and all icons: they build into `dist/client/` (`/manifest.webmanifest`,
+`/sw.js`) from the single source `public/favicon.svg` — edit the SVG and the
+build regenerates matching PNGs, no committed icon files. The service worker
+precaches only hashed client assets + icons; navigations always go to the
+network, so reloads show fresh D1 data. Rename the app via `manifest` `name`
+in `vite.config.ts` and `head` `title` in `void.config.ts`.
 
 ## Bindings
 
@@ -59,6 +70,7 @@ and the fleet), never in `void.config.ts`.
 | daisyUI           | ^5               |
 | effect            | ^4               |
 | vite              | ^8               |
+| vite-plugin-pwa   | ^2               |
 
 ## License
 

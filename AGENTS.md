@@ -20,8 +20,8 @@ In a local checkout, `bun run fmt` formats the code (oxfmt) and
   `prefers-color-scheme`).
 - `void.config.ts` — Worker name, document `head`, bindings. Edits need
   `bun run build` (bindings and `head` are read from the built config).
-- `public/manifest.webmanifest`, `public/favicon.svg` — linked from `head`
-  in `void.config.ts`.
+- `public/favicon.svg` — the app icon; `head` in `void.config.ts` links the
+  PWA manifest + icons (see `## PWA`).
 
 ## Ilha
 
@@ -138,6 +138,18 @@ const { results } = await env.DB.prepare("SELECT id, text FROM item ORDER BY id"
 `prepare()` takes one statement; `bind(...)` fills `?`; `all()` returns
 `{ results }`, `first()` one row, `run()` writes. Verify against
 https://void.cloud/guide/database and https://celld.dev/docs/services/d1/.
+
+## PWA
+
+Every app is installable: `vite-plugin-pwa` (`registerType: autoUpdate`,
+`generateSW`) owns `manifest.webmanifest`, `sw.js`, and all icons, built
+into `dist/client/` from the single source `public/favicon.svg` (`pwaAssets`
+regenerates PNGs every build — never commit icon PNGs or a hand-written
+manifest). The SSR app has no index.html, so `pages/_pwa.ts` registers the
+SW on the client and `void.config.ts` `head` carries the manifest/icon
+links. Never set `navigateFallback` or precache HTML: navigations go to the
+network so reloads always show fresh D1 data. Rename the app via `manifest`
+`name` in `vite.config.ts` + `head` `title`.
 
 ## Page text
 

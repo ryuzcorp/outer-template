@@ -79,13 +79,34 @@ const emitCelldConfig = (): Plugin => ({
       run_worker_first: true,
     };
 
-    // D1 is keyed by name: drop Void's default `migrations_dir` (it points
-    // at a directory that does not exist). Outer's deploy runs no migration
-    // files, so apps create their tables in code (see AGENTS.md, "D1").
+    // D1 is keyed by name: every entry carries the repo's migrations folder
+    // (`db/migrations`, where `void db generate` writes) so Outer, celld
+    // and `void db` agree. Void rewrites the declared dir relative to its
+    // own `dist/ssr/wrangler.json` (e.g. `../../db/migrations`), which is
+    // wrong relative to this deploy root and fails Outer's validation (no
+    // `.`/`..` segments), so resolve it back against the app root. A
+    // missing value would mean Void's default `migrations`, which does not
+    // exist — fall back to the template convention.
     if (Array.isArray(config["d1_databases"])) {
       for (const entry of config["d1_databases"]) {
         if (typeof entry === "object" && entry !== null) {
-          delete (entry as Record<string, unknown>)["migrations_dir"];
+          const record = entry as Record<string, unknown>;
+          const raw = record["migrations_dir"];
+          let dir = "db/migrations";
+          if (typeof raw === "string" && raw) {
+            const rel = path.relative(APP_ROOT, path.resolve(dist, "ssr", raw));
+            const posix = rel.split(path.sep).join("/");
+            const segments = posix.split("/");
+            if (
+              posix &&
+              !posix.startsWith("../") &&
+              posix !== ".." &&
+              segments.every((s) => s && s !== "." && s !== "..")
+            ) {
+              dir = posix;
+            }
+          }
+          record["migrations_dir"] = dir;
         }
       }
     }

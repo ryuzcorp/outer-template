@@ -37,7 +37,10 @@ export default defineConfig({
     name: "outer-app",
     // The app's D1 database, provisioned by Outer on first deploy. Read it
     // in server modules with `env.DB` from `cloudflare:workers`.
-    d1_databases: [{ binding: "DB", database_name: "app-db" }],
+    // `migrations_dir` is the repo folder `void db generate` writes and
+    // `void db migrate` (and dev-server startup) applies locally; Outer
+    // applies the committed files on deploy before the new code goes live.
+    d1_databases: [{ binding: "DB", database_name: "app-db", migrations_dir: "db/migrations" }],
   },
   worker: {
     compatibility_date: "2026-09-01",

@@ -122,19 +122,19 @@ enabled (`pages/app.css`); switching themes needs no code.
 ## D1
 
 `env.DB` is on by default (`void.config.ts`, `d1_databases`); Outer
-provisions it on first deploy. Outer's deploy does NOT run migration files
-— create tables in code, as `pages/index.server.ts` does:
+provisions it on first deploy. Schema changes ride the deploy as committed
+migration files in `db/migrations/` (`void db generate` writes
+`NNNN_name.sql`):
 
-```ts
-import { env } from "cloudflare:workers";
-
-await env.DB.prepare(
-  "CREATE TABLE IF NOT EXISTS item (id INTEGER PRIMARY KEY AUTOINCREMENT, text TEXT NOT NULL)",
-).run();
-const text = "Milk"; // e.g. a trimmed form field from the action
-await env.DB.prepare("INSERT INTO item (text) VALUES (?)").bind(text).run();
-const { results } = await env.DB.prepare("SELECT id, text FROM item ORDER BY id").all();
-```
+- Outer applies pending migrations on deploy, before the new code goes
+  live. A failing migration fails the deploy; the previous version keeps
+  serving.
+- Never edit an applied migration — add a new one. Expand first (new
+  tables, nullable columns): the migration runs while the old code still
+  serves, so dropping a column the live code reads serves errors.
+- Tables in code (`pages/index.server.ts` starter) remain fine for tiny
+  apps; the starter keeps its `CREATE TABLE IF NOT EXISTS` because `vite
+  preview` runs no migrations.
 
 `prepare()` takes one statement; `bind(...)` fills `?`; `all()` returns
 `{ results }`, `first()` one row, `run()` writes. Verify against

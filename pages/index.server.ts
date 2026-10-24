@@ -7,9 +7,13 @@ export interface Item {
   text: string;
 }
 
-// D1 is the app's database. Outer's deploy runs no migration files, so the
-// table is created here, on first use. Nothing is kept in module scope: the
-// app can sleep between requests, and only D1 survives.
+// D1 is the app's database. The table lives in `db/migrations/0001_item.sql`:
+// dev-server startup and `void db migrate` apply it locally, and Outer
+// applies committed migrations on deploy before the new code goes live.
+// The CREATE below stays as a backstop — `vite preview` runs no migrations,
+// so a fresh local DB would otherwise miss the table. Same statement as the
+// migration, `IF NOT EXISTS`, so the two can never disagree. Nothing is kept
+// in module scope: the app can sleep between requests, and only D1 survives.
 async function database() {
   await env.DB.prepare(
     "CREATE TABLE IF NOT EXISTS item (id INTEGER PRIMARY KEY AUTOINCREMENT, text TEXT NOT NULL)",

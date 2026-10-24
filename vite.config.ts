@@ -80,8 +80,8 @@ const emitCelldConfig = (): Plugin => ({
     };
 
     // D1 is keyed by name: drop Void's default `migrations_dir` (it points
-    // at a directory that does not exist; schema migrates through `void db`,
-    // never through wrangler migrations).
+    // at a directory that does not exist). Outer's deploy runs no migration
+    // files, so apps create their tables in code (see AGENTS.md, "D1").
     if (Array.isArray(config["d1_databases"])) {
       for (const entry of config["d1_databases"]) {
         if (typeof entry === "object" && entry !== null) {

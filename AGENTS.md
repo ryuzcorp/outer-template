@@ -131,6 +131,7 @@ import { env } from "cloudflare:workers";
 await env.DB.prepare(
   "CREATE TABLE IF NOT EXISTS item (id INTEGER PRIMARY KEY AUTOINCREMENT, text TEXT NOT NULL)",
 ).run();
+const text = "Milk"; // e.g. a trimmed form field from the action
 await env.DB.prepare("INSERT INTO item (text) VALUES (?)").bind(text).run();
 const { results } = await env.DB.prepare("SELECT id, text FROM item ORDER BY id").all();
 ```

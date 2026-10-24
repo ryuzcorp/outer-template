@@ -109,6 +109,22 @@ list-col-grow`, `badge`, `alert alert-soft`, `fieldset`, `footer`,
 hardcoded colors break the `dark` theme. Only `light` and `dark` are
 enabled (`pages/app.css`); switching themes needs no code.
 
+## Phones first
+
+Most people open their apps on a phone. Every page must work at 360px wide
+before it looks good at desktop width:
+
+- Keep the `charset` and `viewport` meta first in `void.config.ts` `head`.
+  Without the viewport, phones render a zoomed-out 980px page.
+- Stack by default, spread out from `sm:` up: `grid grid-cols-1
+  sm:grid-cols-3`, `flex flex-col sm:flex-row`. Use `stats-vertical
+  sm:stats-horizontal` for daisyUI stats.
+- No fixed widths wider than the screen; long text gets `truncate` or
+  `break-words`; wide tables sit in `overflow-x-auto`.
+- Tap targets: `btn` (not `btn-xs`) for primary actions; inputs `w-full`.
+- Use `min-h-dvh`, not `min-h-screen`, so mobile browser bars don't cut off
+  the page.
+
 ## celld
 
 - No module-scope state across requests in production: every request reads

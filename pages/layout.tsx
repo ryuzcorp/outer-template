@@ -11,7 +11,7 @@ if (typeof window !== "undefined") {
 
 export default function Layout({ children }: { children?: View }) {
   return (
-    <div class="flex min-h-screen flex-col">
+    <div class="flex min-h-dvh flex-col">
       <header class="navbar bg-base-100 shadow-sm">
         <div class="mx-auto w-full max-w-2xl px-4">
           <Link href="/" class="btn btn-ghost px-2 text-lg">
@@ -21,7 +21,8 @@ export default function Layout({ children }: { children?: View }) {
       </header>
       <main class="mx-auto w-full max-w-2xl grow px-4 py-8">{children}</main>
       <footer class="footer footer-center bg-base-200 p-4 text-sm">
-        <p>
+        {/* daisyUI makes footer children grids; `block` keeps the line inline. */}
+        <p class="block">
           Built with{" "}
           <a class="link" href="https://ilha.build">
             Ilha

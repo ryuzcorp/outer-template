@@ -3,6 +3,7 @@ import path from "node:path";
 
 import { voidIlha } from "@ilha/void/plugin";
 import tailwindcss from "@tailwindcss/vite";
+import { VitePWA } from "vite-plugin-pwa";
 import { defineConfig } from "vite";
 import type { Plugin } from "vite";
 import { voidPlugin } from "void";
@@ -34,7 +35,7 @@ const CELLD_KEYS = [
 /** Write the deploy-root `dist/wrangler.json` celld deploys, derived from
  * Void's own `dist/ssr/wrangler.json` (never handwritten): `main` rewrites
  * to deploy-root-relative `ssr/…`, the asset directory to `client`, and
- * `vars` to `{}` (Noite patches the app's real env at deploy time).
+ * `vars` to `{}` (Outer patches the app's real env at deploy time).
  * Void's Cloudflare-only `dist/client/.assetsignore` is removed: `celld
  * deploy` refuses it outright, and its entries need no replacement —
  * `wrangler.json` is celld's config surface (never an asset).
@@ -61,8 +62,7 @@ const emitCelldConfig = (): Plugin => ({
         ? (ssr["assets"] as Record<string, unknown>)
         : {};
 
-    const ssrMain =
-      typeof ssr["main"] === "string" && ssr["main"] ? ssr["main"] : "index.js";
+    const ssrMain = typeof ssr["main"] === "string" && ssr["main"] ? ssr["main"] : "index.js";
 
     const config: Record<string, unknown> = {};
 
@@ -80,8 +80,8 @@ const emitCelldConfig = (): Plugin => ({
     };
 
     // D1 is keyed by name: drop Void's default `migrations_dir` (it points
-    // at a directory that does not exist; schema migrates through `void db`,
-    // never through wrangler migrations).
+    // at a directory that does not exist). Outer's deploy runs no migration
+    // files, so apps create their tables in code (see AGENTS.md, "D1").
     if (Array.isArray(config["d1_databases"])) {
       for (const entry of config["d1_databases"]) {
         if (typeof entry === "object" && entry !== null) {
@@ -91,14 +91,58 @@ const emitCelldConfig = (): Plugin => ({
     }
 
     config["vars"] = {};
-    writeFileSync(
-      path.join(dist, "wrangler.json"),
-      `${JSON.stringify(config, null, 2)}\n`
-    );
+    writeFileSync(path.join(dist, "wrangler.json"), `${JSON.stringify(config, null, 2)}\n`);
   },
   name: "celld-config",
 });
 
 export default defineConfig({
-  plugins: [voidPlugin(), voidIlha(), tailwindcss(), emitCelldConfig()],
+  plugins: [
+    voidPlugin(),
+    voidIlha(),
+    tailwindcss(),
+    // PWA: https://vite-pwa-org.netlify.app/guide/ — manifest, service
+    // worker and icons are owned here; the SSR app has no index.html, so
+    // registration is manual (see pages/_pwa.ts).
+    VitePWA({
+      // /guide/auto-update: a new SW takes control and reloads open tabs.
+      // (clientsClaim + skipWaiting are forced by the plugin for autoUpdate.)
+      registerType: "autoUpdate",
+      // /guide/register-service-worker (Manual Registration): the SSR app
+      // has no index.html for auto/script injection; pages/_pwa.ts
+      // registers the SW on the client instead.
+      injectRegister: null,
+      // No service worker in `vite dev`.
+      devOptions: { enabled: false },
+      // /guide/pwa-minimal-requirements: the plugin generates
+      // dist/client/manifest.webmanifest from this. Icons are injected by
+      // pwaAssets (the plugin fills them in when the manifest omits them).
+      manifest: {
+        name: "Outer App",
+        short_name: "Outer",
+        description: "An Outer app: server-rendered Ilha pages on Void.",
+        start_url: "/",
+        scope: "/",
+        display: "standalone",
+        theme_color: "#ffffff",
+        background_color: "#ffffff",
+      },
+      // /assets-generator/integrations: build-time icons from the single
+      // source public/favicon.svg (minimal-2023 preset by default).
+      pwaAssets: { image: "public/favicon.svg" },
+      workbox: {
+        // No navigation fallback: pages are server-rendered and data is
+        // live (the plugin defaults this to index.html, an SPA shell that
+        // does not exist here). Navigations always go to the network, so a
+        // reload always shows fresh D1 data and POSTs are never cached.
+        navigateFallback: null,
+        // /guide/static-assets (globPatterns): precache only the client
+        // build's hashed assets plus generated icons/fonts — never HTML.
+        // manifest.webmanifest is precached automatically (see
+        // includeManifestIcons) and needs no pattern here.
+        globPatterns: ["**/*.{js,css,png,svg,ico}"],
+      },
+    }),
+    emitCelldConfig(),
+  ],
 });

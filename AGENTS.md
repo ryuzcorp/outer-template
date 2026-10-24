@@ -13,7 +13,7 @@ In a local checkout, `bun run fmt` formats the code (oxfmt) and
 
 - `pages/index.tsx` → `/`. The file path is the route; `_`-prefixed files
   are components, never routes.
-- `pages/index.server.ts` — loader + action. They run in the Worker.
+- `pages/index.server.ts` — loader + action on D1. They run in the Worker.
 - `pages/layout.tsx` — wraps every page. Its footer links
   https://ilha.build; removable.
 - `pages/app.css` — Tailwind + daisyUI (`light` default, `dark` for
@@ -63,16 +63,22 @@ export default function Counter({ start = 0 }: { start?: number }) {
 
 ## Void
 
+The starter page is the pattern to copy: `pages/index.server.ts` has a
+loader that reads D1 and one action that writes it; `pages/index.tsx`
+renders the list with one `useForm` per form. Replace it with the user's
+app — don't keep the starter list around.
+
 ```ts
 // pages/index.server.ts
 import { defineHandler } from "void";
 import type { InferProps } from "void";
 
 export type Props = InferProps<typeof loader>;
-export const loader = defineHandler(() => ({ todos: ["Ship it"] }));
+export const loader = defineHandler(async () => ({ items: [] }));
+// One action per page; an `intent` field tells the forms apart.
 export const action = defineHandler(async (c) => {
-  const { text } = await c.req.json<{ text?: string }>();
-  if (!text?.trim()) {
+  const { intent, text } = await c.req.json<{ intent?: string; text?: string }>();
+  if (intent === "add" && !text?.trim()) {
     return c.json({ errors: { text: "Write something first." } }, 422);
   }
   // ...mutate, then return nothing: Void re-runs the loader and applies
@@ -83,8 +89,8 @@ export const action = defineHandler(async (c) => {
 ```tsx
 import { Form, useForm } from "@ilha/void";
 
-const form = useForm("/", { text: "" });
-// form.data.text, form.setData("text", v), form.errors.text, form.pending
+const add = useForm("/" as string, { intent: "add", text: "" });
+// add.data.text, add.setData("text", v), add.errors.text, add.pending
 ```
 
 - `422` with `{ errors: { field: "message" } }` fills the form's errors.
@@ -94,11 +100,14 @@ const form = useForm("/", { text: "" });
 
 ## daisyUI
 
-Use component classes: `btn btn-primary`, `card card-body`, `input`,
-`join join-item`, `navbar`, `footer footer-center`, `list list-row`,
-`link`, `text-error`. Faint text is `opacity-70`, not gray utilities —
-hardcoded grays break the `dark` theme. Only `light` and `dark` themes
-are enabled (`pages/app.css`); switching themes needs no code.
+Style with daisyUI components (https://daisyui.com/components/), not
+hand-rolled utility stacks: `navbar`, `card card-body card-title`, `btn
+btn-primary btn-ghost btn-sm`, `input`, `join join-item`, `list list-row
+list-col-grow`, `badge`, `alert alert-soft`, `fieldset`, `footer`,
+`link`, `text-error`. Use Tailwind utilities only for layout (`flex`,
+`gap-*`, `max-w-*`). Faint text is `opacity-70`, not gray utilities —
+hardcoded colors break the `dark` theme. Only `light` and `dark` are
+enabled (`pages/app.css`); switching themes needs no code.
 
 ## celld
 
@@ -112,16 +121,18 @@ are enabled (`pages/app.css`); switching themes needs no code.
 
 ## D1
 
-Uncomment `d1_databases` in `void.config.ts` and rebuild. Outer's deploy
-does NOT run migration files — create tables in code with `exec`:
+`env.DB` is on by default (`void.config.ts`, `d1_databases`); Outer
+provisions it on first deploy. Outer's deploy does NOT run migration files
+— create tables in code, as `pages/index.server.ts` does:
 
 ```ts
 import { env } from "cloudflare:workers";
 
-await env.DB.exec(`CREATE TABLE IF NOT EXISTS item (
-  id INTEGER PRIMARY KEY AUTOINCREMENT, label TEXT NOT NULL)`);
-await env.DB.prepare("INSERT INTO item (label) VALUES (?)").bind(label.trim()).run();
-const { results } = await env.DB.prepare("SELECT id, label FROM item ORDER BY id").all();
+await env.DB.prepare(
+  "CREATE TABLE IF NOT EXISTS item (id INTEGER PRIMARY KEY AUTOINCREMENT, text TEXT NOT NULL)",
+).run();
+await env.DB.prepare("INSERT INTO item (text) VALUES (?)").bind(text).run();
+const { results } = await env.DB.prepare("SELECT id, text FROM item ORDER BY id").all();
 ```
 
 `prepare()` takes one statement; `bind(...)` fills `?`; `all()` returns

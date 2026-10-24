@@ -28,10 +28,9 @@ export default defineConfig({
   cloudflare: {
     // The Worker name celld serves the app as.
     name: "outer-app",
-    // Optional D1 example, provisioned per app on first deploy. Uncomment it,
-    // run `bun run build` (bindings are read from the built config), and read
-    // it in a server module with `env.DB` from `cloudflare:workers`:
-    // d1_databases: [{ binding: "DB", database_name: "app-db" }],
+    // The app's D1 database, provisioned by Outer on first deploy. Read it
+    // in server modules with `env.DB` from `cloudflare:workers`.
+    d1_databases: [{ binding: "DB", database_name: "app-db" }],
   },
   worker: {
     compatibility_date: "2026-09-01",

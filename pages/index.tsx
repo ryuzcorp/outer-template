@@ -1,13 +1,32 @@
 import { Form, useForm } from "@ilha/void";
 import { atom, watch } from "ilha";
 
-import type { Props } from "./index.server.ts";
+import type { Item, Props } from "./index.server.ts";
 
-export default function Home({ todos }: Props) {
-  const form = useForm("/" as string, { text: "" });
-  // The form is server-rendered in place, but its controlled input and
-  // submit handler exist only after the client hydrates: a fill or click
-  // before that is lost. The controls stay disabled until then.
+function ItemRow({ item }: { item: Item }) {
+  const remove = useForm("/" as string, { intent: "remove", id: item.id });
+  return (
+    <li class="list-row items-center">
+      <span class="list-col-grow">{item.text}</span>
+      <Form form={remove}>
+        <button
+          type="submit"
+          disabled={remove.pending}
+          aria-label={`Remove ${item.text}`}
+          class="btn btn-ghost btn-sm"
+        >
+          Remove
+        </button>
+      </Form>
+    </li>
+  );
+}
+
+export default function Home({ items }: Props) {
+  const add = useForm("/" as string, { intent: "add", text: "" });
+  // The forms are server-rendered, but their handlers exist only after the
+  // client hydrates: a click before that would be lost. Controls stay
+  // disabled until then.
   const mounted = atom(false);
   watch.once(() => {
     if (typeof window === "undefined") {
@@ -16,46 +35,41 @@ export default function Home({ todos }: Props) {
     mounted.set(true);
   });
   return (
-    <div class="flex flex-col gap-6">
-      <header class="flex flex-col gap-2">
-        <h1 class="text-2xl font-semibold">Todos</h1>
-        <p class="text-sm opacity-70">
-          Rendered on the server by the loader in <code>pages/index.server.ts</code>. Edit{" "}
-          <code>pages/index.tsx</code>, then commit to deploy.
-        </p>
-      </header>
-
-      <section class="card bg-base-100 shadow-sm">
-        <div class="card-body gap-4">
-          <ul class="list flex flex-col gap-1">
-            {todos.map((todo) => (
-              <li key={todo.id} class="list-row items-center">
-                {todo.text}
-              </li>
-            ))}
-          </ul>
-          <fieldset disabled={!mounted()} class="m-0 min-w-0 border-0 p-0">
-            <Form form={form} class="join w-full">
-              <input
-                name="text"
-                aria-label="New todo"
-                placeholder="Something to do"
-                value={form.data.text}
-                oninput={(event) => form.setData("text", event.currentTarget.value)}
-                class="input join-item grow"
-              />
-              <button type="submit" disabled={form.pending} class="btn btn-primary join-item">
-                Add
-              </button>
-            </Form>
-          </fieldset>
-          {form.errors.text ? <p class="text-sm text-error">{form.errors.text}</p> : null}
-          <p class="text-sm opacity-70">
-            Adding one calls the server action in <code>pages/index.server.ts</code> — it runs in
-            the Worker, never in the browser.
-          </p>
+    <div class="card bg-base-100 shadow-sm">
+      <div class="card-body gap-4">
+        <div class="flex items-center justify-between gap-2">
+          <h1 class="card-title text-2xl">My list</h1>
+          <span class="badge badge-neutral">{items.length}</span>
         </div>
-      </section>
+        <fieldset disabled={!mounted()} class="fieldset gap-4 p-0">
+          {items.length ? (
+            <ul class="list rounded-box bg-base-200">
+              {items.map((item) => (
+                <ItemRow key={item.id} item={item} />
+              ))}
+            </ul>
+          ) : (
+            <div role="status" class="alert alert-soft">
+              Nothing here yet. Add the first item below.
+            </div>
+          )}
+          <Form form={add} class="join w-full">
+            <input
+              name="text"
+              aria-label="New item"
+              placeholder="Add an item"
+              maxlength={200}
+              value={add.data.text}
+              oninput={(event) => add.setData("text", event.currentTarget.value)}
+              class="input join-item grow"
+            />
+            <button type="submit" disabled={add.pending} class="btn btn-primary join-item">
+              Add
+            </button>
+          </Form>
+          {add.errors.text ? <p class="text-error">{add.errors.text}</p> : null}
+        </fieldset>
+      </div>
     </div>
   );
 }

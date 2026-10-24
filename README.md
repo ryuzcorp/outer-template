@@ -35,8 +35,8 @@ bun run build      # production build: dist/ + dist/wrangler.json
 ## Bindings
 
 `void.config.ts` declares the Worker in its `cloudflare` section. The
-template ships a commented D1 example; uncomment it and run
-`bun run build` after editing (bindings are read from the built config):
+template ships one D1 database, used by the starter page; run
+`bun run build` after editing bindings (they are read from the built config):
 
 ```ts
 d1_databases: [{ binding: "DB", database_name: "app-db" }],
@@ -57,7 +57,7 @@ and the fleet), never in `void.config.ts`.
 | ilha / @ilha/void | ^0.16.0 / ^0.1.4 |
 | void              | ^1.1.12          |
 | daisyUI           | ^5               |
-| effect / hono     | ^4               |
+| effect            | ^4               |
 | vite              | ^8               |
 
 ## License

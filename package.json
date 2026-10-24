@@ -17,7 +17,6 @@
   "dependencies": {
     "daisyui": "^5.7.50",
     "effect": "^4",
-    "hono": "^4.13.13",
     "ilha": "^0.16.0"
   },
   "devDependencies": {

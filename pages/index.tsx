@@ -20,8 +20,7 @@ export default function Home({ todos }: Props) {
       <header class="flex flex-col gap-2">
         <h1 class="text-2xl font-semibold">Todos</h1>
         <p class="text-sm opacity-70">
-          Rendered on the server by the loader in{" "}
-          <code>pages/index.server.ts</code>. Edit{" "}
+          Rendered on the server by the loader in <code>pages/index.server.ts</code>. Edit{" "}
           <code>pages/index.tsx</code>, then commit to deploy.
         </p>
       </header>
@@ -42,27 +41,18 @@ export default function Home({ todos }: Props) {
                 aria-label="New todo"
                 placeholder="Something to do"
                 value={form.data.text}
-                oninput={(event) =>
-                  form.setData("text", event.currentTarget.value)
-                }
+                oninput={(event) => form.setData("text", event.currentTarget.value)}
                 class="input join-item grow"
               />
-              <button
-                type="submit"
-                disabled={form.pending}
-                class="btn btn-primary join-item"
-              >
+              <button type="submit" disabled={form.pending} class="btn btn-primary join-item">
                 Add
               </button>
             </Form>
           </fieldset>
-          {form.errors.text ? (
-            <p class="text-sm text-error">{form.errors.text}</p>
-          ) : null}
+          {form.errors.text ? <p class="text-sm text-error">{form.errors.text}</p> : null}
           <p class="text-sm opacity-70">
-            Adding one calls the server action in{" "}
-            <code>pages/index.server.ts</code> — it runs in the Worker, never
-            in the browser.
+            Adding one calls the server action in <code>pages/index.server.ts</code> — it runs in
+            the Worker, never in the browser.
           </p>
         </div>
       </section>

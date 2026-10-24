@@ -15,7 +15,8 @@ plus the log tail, or `blocked` plus the offending lines to fix.
 ```sh
 bun install
 bun run dev        # Vite dev server on http://localhost:5173
-bun run check      # typecheck + lint + tests
+bun run fmt        # format with oxfmt
+bun run check      # typecheck + lint + format check + tests
 bun run build      # production build: dist/ + dist/wrangler.json
 ```
 
@@ -51,13 +52,13 @@ and the fleet), never in `void.config.ts`.
 
 ## Stack
 
-| Piece | Version |
-| --- | --- |
+| Piece             | Version          |
+| ----------------- | ---------------- |
 | ilha / @ilha/void | ^0.16.0 / ^0.1.4 |
-| void | ^1.1.12 |
-| daisyUI | ^5 |
-| effect / hono | ^4 |
-| vite | ^8 |
+| void              | ^1.1.12          |
+| daisyUI           | ^5               |
+| effect / hono     | ^4               |
+| vite              | ^8               |
 
 ## License
 

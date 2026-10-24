@@ -1,10 +1,13 @@
 # AGENTS.md
 
 You edit this app through Outer's MCP tools: `commit` with exact-match
-`edits`, one idea per message. Outer runs `bun install` + `bun run build`
-and deploys; the call returns `success` + URL, `failed` + log, or `blocked`
-+ lines to fix. Run `bun run check` (typecheck, Oxlint, `bun test`) before
-you finish. After touching server code, read `app_logs`.
+`edits`, one idea per message. Outer runs `bun install` and `bun run build`,
+then deploys. The call returns `success` with the URL, `failed` with the build
+log, or `blocked` with the lines to fix. After touching server code, read
+`app_logs`.
+
+In a local checkout, `bun run fmt` formats the code (oxfmt) and
+`bun run check` runs the typecheck, Oxlint, the format check and `bun test`.
 
 ## Files
 
@@ -117,10 +120,8 @@ import { env } from "cloudflare:workers";
 
 await env.DB.exec(`CREATE TABLE IF NOT EXISTS item (
   id INTEGER PRIMARY KEY AUTOINCREMENT, label TEXT NOT NULL)`);
-await env.DB.prepare("INSERT INTO item (label) VALUES (?)")
-  .bind(label.trim()).run();
-const { results } = await env.DB.prepare(
-  "SELECT id, label FROM item ORDER BY id").all();
+await env.DB.prepare("INSERT INTO item (label) VALUES (?)").bind(label.trim()).run();
+const { results } = await env.DB.prepare("SELECT id, label FROM item ORDER BY id").all();
 ```
 
 `prepare()` takes one statement; `bind(...)` fills `?`; `all()` returns

@@ -61,8 +61,7 @@ const emitCelldConfig = (): Plugin => ({
         ? (ssr["assets"] as Record<string, unknown>)
         : {};
 
-    const ssrMain =
-      typeof ssr["main"] === "string" && ssr["main"] ? ssr["main"] : "index.js";
+    const ssrMain = typeof ssr["main"] === "string" && ssr["main"] ? ssr["main"] : "index.js";
 
     const config: Record<string, unknown> = {};
 
@@ -91,10 +90,7 @@ const emitCelldConfig = (): Plugin => ({
     }
 
     config["vars"] = {};
-    writeFileSync(
-      path.join(dist, "wrangler.json"),
-      `${JSON.stringify(config, null, 2)}\n`
-    );
+    writeFileSync(path.join(dist, "wrangler.json"), `${JSON.stringify(config, null, 2)}\n`);
   },
   name: "celld-config",
 });

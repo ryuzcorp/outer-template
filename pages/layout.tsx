@@ -16,7 +16,10 @@ export default function Layout({ children }: { children?: View }) {
       <main class="mx-auto w-full max-w-2xl grow px-4 py-8">{children}</main>
       <footer class="footer footer-center bg-base-200 p-4 text-sm">
         <p>
-          Built with <a class="link" href="https://ilha.build">Ilha</a>
+          Built with{" "}
+          <a class="link" href="https://ilha.build">
+            Ilha
+          </a>
         </p>
       </footer>
     </div>

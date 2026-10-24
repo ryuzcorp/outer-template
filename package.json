@@ -9,8 +9,10 @@
     "preview": "vite preview",
     "typecheck": "vite build && tsc --noEmit",
     "lint": "oxlint",
+    "fmt": "oxfmt",
+    "fmt:check": "oxfmt --check",
     "test": "bun test",
-    "check": "bun run typecheck && bun run lint && bun run test"
+    "check": "bun run typecheck && bun run lint && bun run fmt:check && bun run test"
   },
   "dependencies": {
     "daisyui": "^5.7.50",
@@ -23,6 +25,7 @@
     "@ilha/void": "^0.1.4",
     "@tailwindcss/vite": "^4.3.3",
     "@types/bun": "^1.4.2",
+    "oxfmt": "^0.74.0",
     "oxlint": "^1.86.0",
     "tailwindcss": "^4.3.3",
     "typescript": "^7",

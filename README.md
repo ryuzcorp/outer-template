@@ -44,7 +44,7 @@ d1_databases: [{ binding: "DB", database_name: "app-db" }],
 
 The platform provisions the database per app on first deploy. Outer’s
 deploy does NOT run migration files: create tables in code with
-`env.DB.exec(...)` (see `AGENTS.md`). Read the binding in a server module
+`CREATE TABLE IF NOT EXISTS` (see `pages/index.server.ts`). Read the binding in a server module
 with `env` from `cloudflare:workers`.
 
 Secrets: set them as env vars on the app (Outer passes them to the build
